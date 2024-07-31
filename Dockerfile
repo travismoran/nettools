@@ -26,9 +26,9 @@ MAINTAINER Travis Moran
 # tmux          - run multiple things in one terminal session, with tabs and split windows
 # screen        - similar to tmux, for running things in the background
 # vim/nano      - for times when you need a text editor. remember! don't expect files on a container to be persisted. use a volume.
-# curl 
-# wget
-# sipsak
+# curl          - curl is a tool for transferring data from or to a server using URLs
+# wget          - GNU Wget is a free utility for non-interactive download of files from the Web
+# sipsak        - sipsak is a SIP stress and diagnostics utility
 
 RUN apt-get update -y && \
     apt-get install -y bash-completion command-not-found mtr-tiny dnsutils net-tools && \
