@@ -6,14 +6,7 @@ MAINTAINER Travis Moran
 #
 # Docker Networking Toolkit
 #
-#     Official Github: https://github.com/Someguy123/docker-networktools
-#     by @someguy123
-#
-# Ubuntu 18.04 LTS with various networking tools pre-installed, for debugging networks.
-# Originally developed for GNS3 (network prototyping tool), for troubleshooting and testing
-# your GNS3 topology (https://www.gns3.com)
-#
-####
+
 
 ####
 # Packages included
@@ -33,6 +26,9 @@ MAINTAINER Travis Moran
 # tmux          - run multiple things in one terminal session, with tabs and split windows
 # screen        - similar to tmux, for running things in the background
 # vim/nano      - for times when you need a text editor. remember! don't expect files on a container to be persisted. use a volume.
+# curl 
+# wget
+# sipsak
 
 RUN apt-get update -y && \
     apt-get install -y bash-completion command-not-found mtr-tiny dnsutils net-tools && \
