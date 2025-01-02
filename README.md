@@ -1,4 +1,7 @@
 # nettools
+
+docker run -it ghcr.io/travismoran/nettools:main bash
+
 ```
 bash-completion   - to make bash tab completion better
 command-not-found - when you type a command that doesn't exist, it informs you of which package a command is in
