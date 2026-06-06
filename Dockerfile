@@ -37,19 +37,18 @@ RUN apt-get update -y && \
     apt-get clean -y && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-# Remove sudo and other privilege escalation tools before removing package managers
-RUN apt-get remove -y sudo && \
-    apt-get clean -y && \
-    rm -rf /var/lib/apt/lists/*
-
 # Remove package managers to prevent tool installation
-RUN rm -rf /usr/bin/apt-get /usr/bin/apt /usr/bin/dpkg /bin/sh /bin/bash && \
+# This is the primary security lock - without package managers, no new tools can be installed
+RUN rm -rf /usr/bin/apt-get /usr/bin/apt /usr/bin/dpkg /usr/bin/apt-mark /usr/bin/apt-cache && \
+    rm -rf /etc/apt /var/lib/apt
+
+# Remove shell interpreters except dash (minimal shell)
+RUN rm -f /bin/bash /bin/sh && \
     ln -s /bin/dash /bin/sh
 
-# Set minimal PATH - remove write permissions on sensitive directories
-RUN chmod 755 /usr/local/bin /usr/bin /bin && \
-    chmod 755 /etc && \
-    find /usr -type f -perm /u+s -o -perm /g+s 2>/dev/null | xargs chmod -s 2>/dev/null || true
+# Remove write permissions on sensitive directories to prevent modifications
+RUN chmod 555 /usr/local/bin /usr/bin /bin /etc && \
+    find /usr -type f \( -perm /u+s -o -perm /g+s \) 2>/dev/null | xargs chmod -s 2>/dev/null || true
 
 # Switch to non-root user
 USER nettools
