@@ -37,14 +37,14 @@ RUN apt-get update -y && \
     apt-get clean -y && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-# Remove package managers to prevent tool installation
-RUN rm -rf /usr/bin/apt-get /usr/bin/apt /usr/bin/dpkg /bin/sh /bin/bash && \
-    ln -s /bin/dash /bin/sh
-
-# Disable sudo and remove sudo binary
+# Remove sudo and other privilege escalation tools before removing package managers
 RUN apt-get remove -y sudo && \
     apt-get clean -y && \
     rm -rf /var/lib/apt/lists/*
+
+# Remove package managers to prevent tool installation
+RUN rm -rf /usr/bin/apt-get /usr/bin/apt /usr/bin/dpkg /bin/sh /bin/bash && \
+    ln -s /bin/dash /bin/sh
 
 # Set minimal PATH - remove write permissions on sensitive directories
 RUN chmod 755 /usr/local/bin /usr/bin /bin && \
