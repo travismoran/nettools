@@ -37,6 +37,20 @@ RUN apt-get update -y && \
     apt-get clean -y && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
+# Add helpful information as root before locking down permissions
+RUN mkdir -p /home/nettools && \
+    echo "# Secure Nettools Image" > /home/nettools/README.md && \
+    echo "## Available Tools" >> /home/nettools/README.md && \
+    echo "- curl/wget: HTTP requests and file downloads" >> /home/nettools/README.md && \
+    echo "- nmap: Network scanning and service discovery" >> /home/nettools/README.md && \
+    echo "- netcat-openbsd: Network connections and data transfer" >> /home/nettools/README.md && \
+    echo "- dig/nslookup: DNS queries" >> /home/nettools/README.md && \
+    echo "- ping/traceroute: ICMP diagnostics" >> /home/nettools/README.md && \
+    echo "- tcpdump: Packet capture and analysis" >> /home/nettools/README.md && \
+    echo "- strace/lsof: Process and file descriptor analysis" >> /home/nettools/README.md && \
+    echo "- jq: JSON query and manipulation" >> /home/nettools/README.md && \
+    chown -R nettools:nettools /home/nettools
+
 # Remove package managers to prevent tool installation
 # This is the primary security lock - without package managers, no new tools can be installed
 RUN rm -rf /usr/bin/apt-get /usr/bin/apt /usr/bin/dpkg /usr/bin/apt-mark /usr/bin/apt-cache && \
@@ -55,19 +69,6 @@ USER nettools
 
 # Set a basic prompt
 ENV PS1='nettools$ '
-
-# Add helpful information
-RUN mkdir -p /home/nettools && \
-    echo "# Secure Nettools Image" > /home/nettools/README.md && \
-    echo "## Available Tools" >> /home/nettools/README.md && \
-    echo "- curl/wget: HTTP requests and file downloads" >> /home/nettools/README.md && \
-    echo "- nmap: Network scanning and service discovery" >> /home/nettools/README.md && \
-    echo "- netcat-openbsd: Network connections and data transfer" >> /home/nettools/README.md && \
-    echo "- dig/nslookup: DNS queries" >> /home/nettools/README.md && \
-    echo "- ping/traceroute: ICMP diagnostics" >> /home/nettools/README.md && \
-    echo "- tcpdump: Packet capture and analysis" >> /home/nettools/README.md && \
-    echo "- strace/lsof: Process and file descriptor analysis" >> /home/nettools/README.md && \
-    echo "- jq: JSON query and manipulation" >> /home/nettools/README.md
 
 EXPOSE 10000-20000
 
