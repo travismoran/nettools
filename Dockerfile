@@ -16,7 +16,7 @@ RUN apt-get update -y && \
 # Install Kubernetes debugging and analysis tools
 RUN apt-get update -y && \
     apt-get install -y \
-        bind-tools jq yq grpcurl hexdump strace ltrace lsof socat conntrack \
+        dnsutils jq bsdmainutils strace ltrace lsof socat conntrack \
         tcpflow tshark wireshark-common ethtool iperf3 && \
     apt-get clean -qy
 
@@ -29,7 +29,7 @@ RUN apt-get update -y && \
 # Install security and port scanning tools
 RUN apt-get update -y && \
     apt-get install -y \
-        nmap-ncat masscan hydra nikto sqlmap \
+        nmap-ncat masscan hydra nikto \
         openvpn openssl telnet \
         whois iptables ebtables arping arp-scan && \
     apt-get clean -qy
