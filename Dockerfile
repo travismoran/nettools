@@ -8,7 +8,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update -y && \
     apt-get install -y \
         bash-completion command-not-found mtr-tiny dnsutils net-tools \
-        nmap traceroute netcat iproute2 tcpdump iputils-ping isc-dhcp-client \
+        nmap traceroute netcat-openbsd iproute2 tcpdump iputils-ping isc-dhcp-client \
         openssh-client tmux screen vim nano \
         curl wget sipsak supervisor gnupg lsb-release unzip software-properties-common git && \
     apt-get clean -qy
@@ -29,7 +29,7 @@ RUN apt-get update -y && \
 # Install security and port scanning tools
 RUN apt-get update -y && \
     apt-get install -y \
-        nmap-ncat masscan hydra nikto sqlmap metasploit-framework \
+        nmap-ncat masscan hydra nikto sqlmap \
         openvpn openssl telnet \
         whois iptables ebtables arping arp-scan && \
     apt-get clean -qy
