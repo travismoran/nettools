@@ -13,27 +13,6 @@ RUN apt-get update -y && \
         curl wget sipsak supervisor gnupg lsb-release unzip software-properties-common git && \
     apt-get clean -qy
 
-# Install Kubernetes debugging and analysis tools
-RUN apt-get update -y && \
-    apt-get install -y \
-        dnsutils jq bsdmainutils strace ltrace lsof socat conntrack \
-        tcpflow tshark wireshark-common ethtool iperf3 && \
-    apt-get clean -qy
-
-# Install load testing tools
-RUN apt-get update -y && \
-    apt-get install -y \
-        apache2-utils siege iperf3 && \
-    apt-get clean -qy
-
-# Install security and port scanning tools
-RUN apt-get update -y && \
-    apt-get install -y \
-        nmap-ncat masscan hydra nikto \
-        openvpn openssl telnet \
-        whois iptables ebtables arping arp-scan && \
-    apt-get clean -qy
-
 # Copy supervisor configuration
 COPY conf/interactive_shell.conf /etc/supervisor/conf.d/interactive_shell.conf
 
@@ -74,11 +53,6 @@ RUN FLUX_VERSION=$(curl -s https://api.github.com/repos/fluxcd/flux2/releases/la
     mv flux /usr/local/bin/flux && \
     rm flux.tar.gz
 
-# Install additional cloud CLI tools
-RUN apt-get update -y && \
-    apt-get install -y \
-        awscli && \
-    apt-get clean -qy
 
 # Add enhanced Bash prompt with kube context and autocomplete
 RUN cat <<EOT >> /root/.bashrc
