@@ -1,87 +1,76 @@
 FROM ubuntu:24.04
 
 LABEL maintainer="Travis Moran"
+LABEL description="Secure minimal nettools image for Kubernetes network troubleshooting"
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Install core networking/debugging and utility tools
+# Create a non-root user for running the container
+RUN groupadd -r nettools && useradd -r -g nettools nettools
+
+# Install only essential network troubleshooting tools
 RUN apt-get update -y && \
-    apt-get install -y \
-        bash-completion command-not-found mtr-tiny dnsutils net-tools \
-        nmap traceroute netcat-openbsd iproute2 tcpdump iputils-ping isc-dhcp-client \
-        openssh-client tmux screen vim nano \
-        curl wget sipsak supervisor gnupg lsb-release unzip software-properties-common git && \
-    apt-get clean -qy
+    apt-get install -y --no-install-recommends \
+        ca-certificates \
+        curl \
+        wget \
+        dnsutils \
+        iputils-ping \
+        net-tools \
+        iproute2 \
+        tcpdump \
+        nmap \
+        netcat-openbsd \
+        traceroute \
+        jq \
+        vim-tiny \
+        nano && \
+    apt-get clean -y && \
+    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-# Copy supervisor configuration
-COPY conf/interactive_shell.conf /etc/supervisor/conf.d/interactive_shell.conf
+# Install Kubernetes debugging tools (process inspection only)
+RUN apt-get update -y && \
+    apt-get install -y --no-install-recommends \
+        strace \
+        lsof \
+        lsb-release && \
+    apt-get clean -y && \
+    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-# Add bash prompt customization
-SHELL ["/bin/bash","-c"]
-RUN echo 'PS1="\[\033[35m\]\t \[\033[32m\]\h\[\033[m\]:\[\033[33;1m\]\w\[\033[m\] # "' >> /root/.bashrc
+# Remove package managers to prevent tool installation
+RUN rm -rf /usr/bin/apt-get /usr/bin/apt /usr/bin/dpkg /bin/sh /bin/bash && \
+    ln -s /bin/dash /bin/sh
 
-# Install Azure CLI
-RUN curl -sL https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > microsoft.gpg && \
-    install -o root -g root -m 644 microsoft.gpg /etc/apt/trusted.gpg.d/ && \
-    echo "deb [arch=amd64] https://packages.microsoft.com/repos/azure-cli/ $(lsb_release -cs) main" > /etc/apt/sources.list.d/azure-cli.list && \
-    apt-get update && apt-get install -y azure-cli && \
-    rm microsoft.gpg
+# Disable sudo and remove sudo binary
+RUN apt-get remove -y sudo && \
+    apt-get clean -y && \
+    rm -rf /var/lib/apt/lists/*
 
-# Install kubectl
-RUN curl -LO "https://dl.k8s.io/release/$(curl -sL https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl" && \
-    install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl && \
-    rm kubectl
+# Set minimal PATH - remove write permissions on sensitive directories
+RUN chmod 755 /usr/local/bin /usr/bin /bin && \
+    chmod 755 /etc && \
+    find /usr -type f -perm /u+s -o -perm /g+s 2>/dev/null | xargs chmod -s 2>/dev/null || true
 
-# Install k9s
-RUN K9S_VERSION=$(curl -s https://api.github.com/repos/derailed/k9s/releases/latest | grep tag_name | cut -d '"' -f 4) && \
-    curl -Lo k9s.tar.gz "https://github.com/derailed/k9s/releases/download/${K9S_VERSION}/k9s_Linux_amd64.tar.gz" && \
-    tar -xzf k9s.tar.gz && \
-    mv k9s /usr/local/bin/k9s && \
-    rm k9s.tar.gz
+# Switch to non-root user
+USER nettools
 
-# Install kustomize
-RUN KUSTOMIZE_VERSION=$(curl -s https://api.github.com/repos/kubernetes-sigs/kustomize/releases/latest | grep '"tag_name":' | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+') && \
-    curl -Lo kustomize.tar.gz "https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize%2F${KUSTOMIZE_VERSION}/kustomize_${KUSTOMIZE_VERSION}_linux_amd64.tar.gz" && \
-    tar -xzf kustomize.tar.gz && \
-    mv kustomize /usr/local/bin/kustomize && \
-    rm kustomize.tar.gz
+# Set a basic prompt
+ENV PS1='nettools$ '
 
-# Install Flux CLI
-RUN FLUX_VERSION=$(curl -s https://api.github.com/repos/fluxcd/flux2/releases/latest | grep tag_name | cut -d '"' -f 4) && \
-    curl -sL "https://github.com/fluxcd/flux2/releases/download/${FLUX_VERSION}/flux_${FLUX_VERSION#v}_linux_amd64.tar.gz" -o flux.tar.gz && \
-    tar -xzf flux.tar.gz && \
-    mv flux /usr/local/bin/flux && \
-    rm flux.tar.gz
+# Add helpful information
+RUN mkdir -p /home/nettools && \
+    echo "# Secure Nettools Image" > /home/nettools/README.md && \
+    echo "## Available Tools" >> /home/nettools/README.md && \
+    echo "- curl/wget: HTTP requests and file downloads" >> /home/nettools/README.md && \
+    echo "- nmap: Network scanning and service discovery" >> /home/nettools/README.md && \
+    echo "- netcat-openbsd: Network connections and data transfer" >> /home/nettools/README.md && \
+    echo "- dig/nslookup: DNS queries" >> /home/nettools/README.md && \
+    echo "- ping/traceroute: ICMP diagnostics" >> /home/nettools/README.md && \
+    echo "- tcpdump: Packet capture and analysis" >> /home/nettools/README.md && \
+    echo "- strace/lsof: Process and file descriptor analysis" >> /home/nettools/README.md && \
+    echo "- jq: JSON query and manipulation" >> /home/nettools/README.md
 
-
-# Add enhanced Bash prompt with kube context and autocomplete
-RUN cat <<EOT >> /root/.bashrc
-
-# Enable bash completion
-if [ -f /etc/bash_completion ]; then
-  . /etc/bash_completion
-fi
-
-# kubectl completion
-source <(kubectl completion bash)
-
-# flux completion
-flux completion bash > /etc/bash_completion.d/flux
-
-# Show current kube context in the prompt
-function kube_ps1() {
-  CONTEXT=$(kubectl config current-context 2>/dev/null)
-  if [ -n "$CONTEXT" ]; then
-    echo "[k8s:$CONTEXT] "
-  fi
-}
-
-export PS1="\[\033[35m\]\t \[\033[32m\]\h\[\033[m\]:\[\033[33;1m\]\w\[\033[m\] \$(kube_ps1)# "
-
-EOT
-
-# Expose a wide range of ports for debugging and testing
 EXPOSE 10000-20000
 
-# Default command runs supervisord with interactive shell config
-CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/interactive_shell.conf"]
+# Use dash instead of bash - minimal shell
+CMD ["/bin/dash"]
