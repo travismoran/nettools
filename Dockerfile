@@ -23,7 +23,7 @@ RUN apt-get update -y && \
 # Install load testing tools
 RUN apt-get update -y && \
     apt-get install -y \
-        apache2-utils siege wrk vegeta && \
+        apache2-utils siege iperf3 && \
     apt-get clean -qy
 
 # Install security and port scanning tools
