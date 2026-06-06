@@ -2,6 +2,8 @@
 
 A lightweight, security-hardened container image designed for network troubleshooting and diagnostics in Kubernetes environments. Built with minimal attack surface and locked-down permissions for safe deployment in corporate environments.
 
+**Image:** `ghcr.io/travismoran/nettools:latest`
+
 ## Overview
 
 This image provides essential network troubleshooting tools without the overhead or security risks of traditional full-featured debugging containers. It's designed to be:
@@ -78,55 +80,55 @@ This image provides essential network troubleshooting tools without the overhead
 
 ### Basic DNS Lookup
 ```bash
-docker run --rm travismoran/nettools dig google.com
-docker run --rm travismoran/nettools nslookup google.com 8.8.8.8
+docker run --rm ghcr.io/travismoran/nettools:latest dig google.com
+docker run --rm ghcr.io/travismoran/nettools:latest nslookup google.com 8.8.8.8
 ```
 
 ### Test HTTP Connectivity
 ```bash
-docker run --rm travismoran/nettools curl -v https://example.com
-docker run --rm travismoran/nettools curl -I https://example.com
+docker run --rm ghcr.io/travismoran/nettools:latest curl -v https://example.com
+docker run --rm ghcr.io/travismoran/nettools:latest curl -I https://example.com
 ```
 
 ### Network Port Scanning
 ```bash
-docker run --rm travismoran/nettools nmap -p 80,443 example.com
-docker run --rm travismoran/nettools nmap -sV -p 22,80,443 10.0.0.1
+docker run --rm ghcr.io/travismoran/nettools:latest nmap -p 80,443 example.com
+docker run --rm ghcr.io/travismoran/nettools:latest nmap -sV -p 22,80,443 10.0.0.1
 ```
 
 ### Check Network Connectivity
 ```bash
-docker run --rm travismoran/nettools ping -c 4 8.8.8.8
-docker run --rm travismoran/nettools traceroute example.com
+docker run --rm ghcr.io/travismoran/nettools:latest ping -c 4 8.8.8.8
+docker run --rm ghcr.io/travismoran/nettools:latest traceroute example.com
 ```
 
 ### Test Specific Port
 ```bash
-docker run --rm travismoran/nettools nc -zv example.com 443
-docker run --rm travismoran/nettools nc -zv 10.0.0.1 3306
+docker run --rm ghcr.io/travismoran/nettools:latest nc -zv example.com 443
+docker run --rm ghcr.io/travismoran/nettools:latest nc -zv 10.0.0.1 3306
 ```
 
 ### Interactive Shell Session
 ```bash
-docker run --rm -it travismoran/nettools
+docker run --rm -it ghcr.io/travismoran/nettools:latest
 # Now you're in a dash shell where you can run multiple commands
 ```
 
 ### Packet Capture
 ```bash
-docker run --rm --cap-add=NET_ADMIN --cap-add=SYS_PTRACE travismoran/nettools \
+docker run --rm --cap-add=NET_ADMIN --cap-add=SYS_PTRACE ghcr.io/travismoran/nettools:latest \
   tcpdump -i eth0 -n 'tcp port 80'
 ```
 
 ### Process Analysis
 ```bash
-docker run --rm --cap-add=SYS_PTRACE travismoran/nettools lsof -i -P -n
-docker run --rm --cap-add=SYS_PTRACE travismoran/nettools strace -e network -p 1
+docker run --rm --cap-add=SYS_PTRACE ghcr.io/travismoran/nettools:latest lsof -i -P -n
+docker run --rm --cap-add=SYS_PTRACE ghcr.io/travismoran/nettools:latest strace -e network -p 1
 ```
 
 ### JSON API Response Processing
 ```bash
-docker run --rm travismoran/nettools \
+docker run --rm ghcr.io/travismoran/nettools:latest \
   sh -c "curl -s https://api.example.com/data | jq '.items[] | .name'"
 ```
 
@@ -137,14 +139,14 @@ docker run --rm travismoran/nettools \
 Deploy a temporary debugging pod that automatically deletes when the command completes:
 
 ```bash
-kubectl run -it --rm --image=travismoran/nettools --restart=Never \
+kubectl run -it --rm --image=ghcr.io/travismoran/nettools:latest --restart=Never \
   nettools-debug -- dig myservice.default.svc.cluster.local
 ```
 
 ### Interactive Troubleshooting Session
 
 ```bash
-kubectl run -it --rm --image=travismoran/nettools --restart=Never \
+kubectl run -it --rm --image=ghcr.io/travismoran/nettools:latest --restart=Never \
   nettools-debug
 ```
 
@@ -153,22 +155,41 @@ This will open an interactive shell. When you exit or your connection times out,
 ### DNS Resolution Testing
 
 ```bash
-kubectl run -it --rm --image=travismoran/nettools --restart=Never \
+kubectl run -it --rm --image=ghcr.io/travismoran/nettools:latest --restart=Never \
   nettools-debug -- dig kubernetes.default.svc.cluster.local
 ```
 
 ### Service Connectivity Check
 
 ```bash
-kubectl run -it --rm --image=travismoran/nettools --restart=Never \
+kubectl run -it --rm --image=ghcr.io/travismoran/nettools:latest --restart=Never \
   nettools-debug -- nc -zv myservice.mynamespace.svc.cluster.local 8080
 ```
 
 ### Network Policy Testing
 
 ```bash
-kubectl run -it --rm --image=travismoran/nettools --restart=Never \
+kubectl run -it --rm --image=ghcr.io/travismoran/nettools:latest --restart=Never \
   --labels="app=nettools" nettools-debug -- curl -v http://target-service:8080
+```
+
+### Persistent Debug Pod (Manual Cleanup)
+
+If you need to keep a pod running for extended troubleshooting:
+
+```bash
+kubectl run --image=ghcr.io/travismoran/nettools:latest --restart=Never \
+  nettools-debug -- sleep infinity
+```
+
+Connect with:
+```bash
+kubectl exec -it nettools-debug -- /bin/dash
+```
+
+Delete when done:
+```bash
+kubectl delete pod nettools-debug
 ```
 
 ### Within a Pod (sidecar-style debugging)
@@ -183,7 +204,7 @@ spec:
   - name: app
     image: myapp:latest
   - name: nettools
-    image: travismoran/nettools:latest
+    image: ghcr.io/travismoran/nettools:latest
     imagePullPolicy: Always
     stdin: true
     tty: true
@@ -194,31 +215,12 @@ Then attach to the nettools container:
 kubectl attach debug-pod -c nettools -i -t
 ```
 
-### Persistent Debug Pod (Manual Cleanup)
-
-If you need to keep a pod running for extended troubleshooting:
-
-```bash
-kubectl run --image=travismoran/nettools --restart=Never \
-  nettools-debug -- sleep infinity
-```
-
-Connect with:
-```bash
-kubectl exec -it nettools-debug -- /bin/dash
-```
-
-Delete when done:
-```bash
-kubectl delete pod nettools-debug
-```
-
 ## Network Capabilities
 
 By default, the image includes standard network capabilities. For advanced packet capture or system tracing, mount additional Linux capabilities:
 
 ```bash
-kubectl run -it --rm --image=travismoran/nettools --restart=Never \
+kubectl run -it --rm --image=ghcr.io/travismoran/nettools:latest --restart=Never \
   --cap-add=NET_ADMIN --cap-add=SYS_PTRACE nettools-debug
 ```
 
